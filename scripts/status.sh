@@ -43,9 +43,22 @@ REASONING=$(echo "$STATUS" | jq -r '.reasoning.running // false')
 IMPROVEMENT=$(echo "$STATUS" | jq -r '.improvement.running // false')
 
 if [ "$HISTORICAL" = "true" ]; then
-    echo -e "      ${GREEN}✓${NC} Historical replay: ACTIVE"
+    echo -e "      ${GREEN}✓${NC} Historical replay: ACTIVE (streaming data)"
+    # Check for progress in logs
+    PROGRESS=$(ssh "$REMOTE_HOST" "cd MarketPulse && docker compose logs --tail=100 pulse-service 2>/dev/null | grep -o 'Published [0-9]* [a-z]* events' | tail -1" || echo "")
+    if [ -n "$PROGRESS" ]; then
+        echo -e "         Progress: $PROGRESS"
+    fi
 else
     echo -e "      ${YELLOW}○${NC} Historical replay: INACTIVE"
+    # Check if it completed
+    NEWS_COMPLETE=$(ssh "$REMOTE_HOST" "cd MarketPulse && docker compose logs pulse-service 2>/dev/null | grep 'News replay complete' | tail -1" 2>/dev/null || echo "")
+    if [ -n "$NEWS_COMPLETE" ]; then
+        NEWS_COUNT=$(echo "$NEWS_COMPLETE" | grep -o '[0-9]\+ events' || echo "")
+        PRICE_COMPLETE=$(ssh "$REMOTE_HOST" "cd MarketPulse && docker compose logs pulse-service 2>/dev/null | grep 'Prices:' | tail -1" 2>/dev/null || echo "")
+        PRICE_COUNT=$(echo "$PRICE_COMPLETE" | grep -o '[0-9]\+ events' || echo "")
+        echo -e "         ${GREEN}Completed${NC}: News=${NEWS_COUNT}, Prices=${PRICE_COUNT}"
+    fi
 fi
 
 if [ "$REASONING" = "true" ]; then

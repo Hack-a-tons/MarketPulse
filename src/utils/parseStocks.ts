@@ -32,8 +32,10 @@ export async function* parseStocksCSV(filePath: string): AsyncGenerator<MarketEv
 
     // Row 2 contains ticker symbols
     if (rowIndex === 2) {
-      tickers = row.slice(1); // Skip first column ("Ticker")
-      console.log(`📈 Found ${tickers.length} stock tickers`);
+      const allTickers = row.slice(1); // Skip first column ("Ticker")
+      // Limit to top 100 most liquid tickers for faster processing
+      tickers = allTickers.slice(0, 100);
+      console.log(`📈 Found ${allTickers.length} stock tickers, using top ${tickers.length}`);
       continue;
     }
 

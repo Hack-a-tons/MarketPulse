@@ -58,12 +58,10 @@ export class HistoricalReplayProducer {
 
       console.log(`✅ News replay complete: ${newsCount} events published`);
 
-      // Stream price events in batches (limit to avoid memory issues)
-      const maxPriceEvents = 50000; // Limit to ~50k prices for demo
+      // Stream price events in batches (top 100 tickers = ~400k events)
       for await (const event of parseStocksCSV(config.data.stocksFile)) {
         if (this.shouldStop) break;
         if (filterDate && !event.timestamp.startsWith(filterDate)) continue;
-        if (priceCount >= maxPriceEvents) break; // Stop after limit
 
         batch.push(event);
         priceCount++;
