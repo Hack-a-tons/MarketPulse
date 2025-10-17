@@ -194,9 +194,9 @@
             <div class="section-title">📈 Performance Metrics</div>
             <div class="grid-4">
                 <div class="card">
-                    <h3>Total Predictions</h3>
+                    <h3>Generated</h3>
                     <div class="value" id="total-predictions">-</div>
-                    <div class="subtext">generated</div>
+                    <div class="subtext">predictions created</div>
                 </div>
                 <div class="card">
                     <h3>Accuracy</h3>
@@ -209,9 +209,9 @@
                     <div class="subtext">per prediction</div>
                 </div>
                 <div class="card">
-                    <h3>Correct</h3>
+                    <h3>Evaluated</h3>
                     <div class="value" id="correct-predictions">-</div>
-                    <div class="subtext">predictions</div>
+                    <div class="subtext">after 24h window</div>
                 </div>
             </div>
         </div>
@@ -306,10 +306,11 @@
         }
 
         function updateMetrics(data) {
-            document.getElementById('total-predictions').textContent = data.totalPredictions;
+            // Use generatedPredictions if available, fallback to totalPredictions
+            document.getElementById('total-predictions').textContent = data.generatedPredictions || data.totalPredictions;
             document.getElementById('accuracy').textContent = (data.accuracy * 100).toFixed(1) + '%';
             document.getElementById('confidence').textContent = (data.averageConfidence * 100).toFixed(1) + '%';
-            document.getElementById('correct-predictions').textContent = data.correctPredictions;
+            document.getElementById('correct-predictions').textContent = data.totalPredictions;
             
             // Prediction types
             document.getElementById('bullish-total').textContent = data.predictionsByType.bullish.total;

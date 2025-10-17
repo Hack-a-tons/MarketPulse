@@ -202,9 +202,17 @@ app.post('/improvement/stop', async (req: Request, res: Response) => {
 app.get('/metrics', async (req: Request, res: Response) => {
   try {
     const metrics = await improvementService.getMetrics();
+    const recentPredictions = reasoningService.recentPredictions;
     
     res.json({
       ...metrics,
+      // Also include generated predictions count for dashboard
+      generatedPredictions: recentPredictions.length,
+      recentPredictions: recentPredictions.slice(0, 5).map(p => ({
+        prediction: p.prediction,
+        confidence: p.confidence,
+        timestamp: p.timestamp,
+      })),
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
