@@ -124,17 +124,33 @@ export class ReasoningService {
     console.log(`   Price events: ${this.priceBuffer.length}`);
 
     try {
-      // Get recent events (last 10 minutes)
-      const now = Date.now();
+      // Find the most recent timestamp across all events (for historical data simulation)
+      const allTimestamps = [
+        ...this.newsBuffer.map(e => new Date(e.timestamp).getTime()),
+        ...this.priceBuffer.map(e => new Date(e.timestamp).getTime())
+      ];
+      
+      if (allTimestamps.length === 0) {
+        console.log('   No events with valid timestamps');
+        return;
+      }
+
+      const latestTimestamp = Math.max(...allTimestamps);
+      
+      // Get events within correlation window relative to the latest event
       const recentNews = this.newsBuffer.filter(e => 
-        now - new Date(e.timestamp).getTime() < this.CORRELATION_WINDOW_MS
+        latestTimestamp - new Date(e.timestamp).getTime() < this.CORRELATION_WINDOW_MS
       );
       const recentPrices = this.priceBuffer.filter(e =>
-        now - new Date(e.timestamp).getTime() < this.CORRELATION_WINDOW_MS
+        latestTimestamp - new Date(e.timestamp).getTime() < this.CORRELATION_WINDOW_MS
       );
 
+      console.log(`   Latest event: ${new Date(latestTimestamp).toISOString()}`);
+      console.log(`   Recent news (within 1h): ${recentNews.length}`);
+      console.log(`   Recent prices (within 1h): ${recentPrices.length}`);
+
       if (recentNews.length === 0 && recentPrices.length === 0) {
-        console.log('   No recent events to analyze');
+        console.log('   No events within correlation window');
         return;
       }
 
