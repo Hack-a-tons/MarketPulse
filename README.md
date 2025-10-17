@@ -50,11 +50,31 @@ mkdir -p data/kaggle/stocks data/kaggle/news
 # - SnP_daily_update.csv → data/kaggle/stocks/
 # - bloomberg_news_articles.csv → data/kaggle/news/
 # - news_sentiment_scores.csv → data/kaggle/news/
+
+# 4. Set up environment variables
+cp .env.example .env
+# Edit .env with your API keys and configuration
 ```
 
 > **Note:** The `data/kaggle/` directory is excluded from version control due to file size. Each developer must download the datasets independently.
 >
 > **Why Bloomberg?** Pre-computed sentiment scores save weeks of model development and provide high-quality financial news directly relevant to S&P 500 predictions.
+
+### Data Range Analysis
+
+The datasets overlap from **2010-01-04 to 2013-11-26** (3.9 years, 939 trading days with both news and stock data).
+
+To analyze the current date range coverage:
+
+```bash
+./scripts/analyze_date_range.sh
+```
+
+This script automatically:
+- ✅ Finds overlapping dates between news and stock datasets
+- ✅ Calculates coverage statistics
+- ✅ Provides recommendations for training periods
+- ✅ Works with updated datasets
 
 ---
 ## 🛠 Core Tools & Architecture
