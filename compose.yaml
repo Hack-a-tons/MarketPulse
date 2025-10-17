@@ -17,10 +17,12 @@ services:
       - --smp 1
       - --default-log-level=info
     ports:
-      - "${REDPANDA_PORT}:9092"
-      - "${REDPANDA_ADMIN_PORT}:9644"
-      - "18081:8081"
-      - "18082:8082"
+      # External:Internal port mapping
+      # External ports (round numbers) from .env, internal ports (standard Kafka/Redpanda)
+      - "${REDPANDA_PORT}:9092"          # Kafka API (external: 19000 -> internal: 9092)
+      - "${REDPANDA_ADMIN_PORT}:9644"    # Admin API (external: 20000 -> internal: 9644)
+      - "18081:8081"                      # Schema Registry
+      - "18082:8082"                      # HTTP Proxy
     networks:
       - marketpulse-network
     volumes:

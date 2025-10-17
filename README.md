@@ -91,7 +91,7 @@ docker compose ps
 docker compose logs -f redpanda
 ```
 
-The service will be available at `localhost:19092` (Kafka API) for your application to connect to.
+The service will be available at `localhost:19000` (Kafka API) for your application to connect to.
 
 > **Note:** All ports are configured in `.env`. Docker Compose uses these values from your environment.
 
@@ -164,8 +164,8 @@ ssh biaz.hurated.com "cd MarketPulse && docker compose logs -f"
 
 **Service URLs:**
 - API: `http://biaz.hurated.com:16000`
-- Redpanda Kafka: `biaz.hurated.com:19092`
-- Redpanda Admin: `http://biaz.hurated.com:19644`
+- Redpanda Kafka: `biaz.hurated.com:19000`
+- Redpanda Admin: `http://biaz.hurated.com:20000`
 
 ### Local Development
 

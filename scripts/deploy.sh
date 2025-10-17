@@ -128,6 +128,6 @@ echo -e "  ${CYAN}ssh ${REMOTE_HOST} 'cd ${REMOTE_DIR} && docker compose logs -f
 echo ""
 echo -e "Service URLs:"
 echo -e "  • API: ${GREEN}http://${REMOTE_HOST}:16000${NC}"
-echo -e "  • Redpanda: ${GREEN}${REMOTE_HOST}:19092${NC}"
-echo -e "  • Redpanda Admin: ${GREEN}http://${REMOTE_HOST}:19644${NC}"
+echo -e "  • Redpanda: ${GREEN}${REMOTE_HOST}:19000${NC}"
+echo -e "  • Redpanda Admin: ${GREEN}http://${REMOTE_HOST}:20000${NC}"
 echo ""
