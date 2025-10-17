@@ -62,6 +62,12 @@ cp .env.example .env
 
 ### Data Range Analysis
 
+**Dataset Statistics:**
+- **Bloomberg News:** 893,524 articles with sentiment scores
+- **S&P 500 Stocks:** 2,515 tickers × 3,973 trading days = ~10M price points
+- **Date Range:** 2006-01-03 to 2025-10-14 (complete history)
+- **Overlap Period:** 2010-01-04 to 2013-11-26 (3.9 years optimal for training)
+
 The datasets overlap from **2010-01-04 to 2013-11-26** (3.9 years, 939 trading days with both news and stock data).
 
 To analyze the current date range coverage:

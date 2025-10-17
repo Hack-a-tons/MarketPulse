@@ -24,70 +24,67 @@ export class HistoricalReplayProducer {
     try {
       await redpandaClient.connect();
 
-      // Merge news and stock events by timestamp
-      const events: MarketEvent[] = [];
+      // Stream events directly without loading all into memory
+      console.log(`📈 Streaming stock prices (batched to avoid memory issues)...`);
+      
+      let newsCount = 0;
+      let priceCount = 0;
 
-      // Load news events
-      for await (const event of parseAllNews(config.data.newsDir)) {
-        if (!filterDate || event.timestamp.startsWith(filterDate)) {
-          events.push(event);
-        }
-      }
-
-      // Load stock events  
-      console.log(`📈 Reading stock prices...`);
-      for await (const event of parseStocksCSV(config.data.stocksFile)) {
-        if (!filterDate || event.timestamp.startsWith(filterDate)) {
-          events.push(event);
-        }
-      }
-
-      // Sort all events by timestamp
-      events.sort((a, b) => 
-        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-      );
-
-      console.log(`📊 Total events to replay: ${events.length}`);
-      console.log(`   News: ${events.filter(e => e.type === 'news').length}`);
-      console.log(`   Prices: ${events.filter(e => e.type === 'price').length}`);
-
-      // Replay events
-      let count = 0;
+      // Stream news events in batches
       const batchSize = 100;
       let batch: MarketEvent[] = [];
 
-      for (const event of events) {
-        if (this.shouldStop) {
-          console.log('⏹️  Replay stopped by user');
-          break;
-        }
+      for await (const event of parseAllNews(config.data.newsDir)) {
+        if (this.shouldStop) break;
+        if (filterDate && !event.timestamp.startsWith(filterDate)) continue;
 
         batch.push(event);
+        newsCount++;
 
         if (batch.length >= batchSize) {
           await redpandaClient.publishBatch(batch);
-          count += batch.length;
-          
-          if (count % 1000 === 0) {
-            console.log(`   Published ${count}/${events.length} events...`);
-          }
-
           batch = [];
-
-          // Simulate real-time delay (reduced by speed multiplier)
-          if (speed < 100) {
-            await new Promise(resolve => setTimeout(resolve, 10 / speed));
+          if (newsCount % 10000 === 0) {
+            console.log(`   📰 Published ${newsCount} news events...`);
           }
         }
       }
 
-      // Publish remaining events
+      // Publish remaining news
       if (batch.length > 0) {
         await redpandaClient.publishBatch(batch);
-        count += batch.length;
+        batch = [];
       }
 
-      console.log(`✅ Historical replay complete: ${count} events published`);
+      console.log(`✅ News replay complete: ${newsCount} events published`);
+
+      // Stream price events in batches (limit to avoid memory issues)
+      const maxPriceEvents = 50000; // Limit to ~50k prices for demo
+      for await (const event of parseStocksCSV(config.data.stocksFile)) {
+        if (this.shouldStop) break;
+        if (filterDate && !event.timestamp.startsWith(filterDate)) continue;
+        if (priceCount >= maxPriceEvents) break; // Stop after limit
+
+        batch.push(event);
+        priceCount++;
+
+        if (batch.length >= batchSize) {
+          await redpandaClient.publishBatch(batch);
+          batch = [];
+          if (priceCount % 10000 === 0) {
+            console.log(`   💰 Published ${priceCount} price events...`);
+          }
+        }
+      }
+
+      // Publish remaining prices
+      if (batch.length > 0) {
+        await redpandaClient.publishBatch(batch);
+      }
+
+      console.log(`✅ Historical replay complete!`);
+      console.log(`   News: ${newsCount} events`);
+      console.log(`   Prices: ${priceCount} events`);
 
     } catch (error) {
       console.error('❌ Error during historical replay:', error);
