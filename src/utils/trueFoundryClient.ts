@@ -73,8 +73,65 @@ class TrueFoundryClient {
       return null;
     } catch (error) {
       console.error('Error calling TrueFoundry API:', error);
+      console.log('⚠️  Using fallback: Generating prediction based on sentiment analysis');
+      
+      // Fallback: Generate prediction based on sentiment scores
+      return this.generateFallbackPrediction(newsEvents, priceEvents);
+    }
+  }
+
+  /**
+   * Generate fallback prediction when TrueFoundry is unavailable
+   */
+  private generateFallbackPrediction(newsEvents: MarketEvent[], priceEvents: MarketEvent[]): MarketPrediction | null {
+    if (newsEvents.length === 0) {
       return null;
     }
+
+    // Calculate average sentiment
+    const sentiments = newsEvents
+      .filter(e => typeof e.sentiment === 'number')
+      .map(e => e.sentiment as number);
+    
+    if (sentiments.length === 0) {
+      return null;
+    }
+
+    const avgSentiment = sentiments.reduce((sum, s) => sum + s, 0) / sentiments.length;
+    
+    // Determine prediction based on sentiment
+    let prediction: 'bullish' | 'bearish' | 'neutral';
+    let confidence: number;
+    
+    if (avgSentiment > 0.6) {
+      prediction = 'bullish';
+      confidence = Math.min(avgSentiment, 0.9);
+    } else if (avgSentiment < 0.4) {
+      prediction = 'bearish';
+      confidence = Math.min(1 - avgSentiment, 0.9);
+    } else {
+      prediction = 'neutral';
+      confidence = 0.6;
+    }
+
+    // Generate reasoning
+    const topHeadlines = newsEvents
+      .slice(0, 3)
+      .map(e => e.headline)
+      .filter(Boolean);
+    
+    const reasoning = `Based on sentiment analysis of ${newsEvents.length} recent news articles (avg sentiment: ${(avgSentiment * 100).toFixed(1)}%), the market shows ${prediction} signals. ${topHeadlines.length > 0 ? 'Key factors: ' + topHeadlines.join('; ') : ''}`;
+
+    return {
+      timestamp: new Date().toISOString(),
+      symbol: priceEvents[0]?.symbol || 'MARKET',
+      prediction,
+      confidence,
+      reasoning,
+      timeHorizon: '24h',
+      correlatedNews: topHeadlines as string[],
+      priceTarget: priceEvents[0]?.price,
+    };
   }
 
   /**
