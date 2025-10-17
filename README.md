@@ -76,6 +76,22 @@ This script automatically:
 - ✅ Provides recommendations for training periods
 - ✅ Works with updated datasets
 
+### Redpanda Setup (Streaming Bus)
+
+**Redpanda** is a Kafka-compatible streaming platform that will be automatically set up via Docker Compose. You don't need to install it manually.
+
+```bash
+# Start Redpanda (will be created in docker-compose.yml)
+docker-compose up -d
+
+# Verify it's running
+docker-compose ps
+```
+
+The service will be available at `localhost:9092` for your application to connect to.
+
+> **Note:** Redpanda configuration is already set in `.env.example`. Docker Compose will handle the installation and setup automatically.
+
 ---
 ## 🛠 Core Tools & Architecture
 - 🕸️ **Apify** — real‑time financial / macro news extraction
