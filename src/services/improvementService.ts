@@ -9,15 +9,15 @@ import { MarketEvent } from '../types';
  */
 export class ImprovementService {
   private priceBuffer: Map<string, MarketEvent[]> = new Map(); // symbol -> recent prices
-  private pendingPredictions: Map<string, { predictionId: string; baselinePrice: number; timestamp: number }> = new Map();
+  private pendingPredictions: Map<string, { predictionId: string; symbol: string; baselinePrice: number; timestamp: number }> = new Map();
   private isRunning = false;
   private consumer = createConsumer('improvement-service');
   private evaluationInterval: NodeJS.Timeout | null = null;
 
   // Configuration
   private readonly PRICE_BUFFER_SIZE = 100;
-  private readonly EVALUATION_WINDOW_MS = 86400000; // 24 hours to evaluate predictions
-  private readonly EVALUATION_INTERVAL_MS = 300000; // Check every 5 minutes
+  private readonly EVALUATION_WINDOW_MS = 24 * 60 * 60 * 1000; // 24 hours in simulation time
+  private readonly EVALUATION_INTERVAL_MS = 30 * 1000; // Check every 30 seconds for historical simulation
 
   async start(): Promise<void> {
     if (this.isRunning) {
@@ -109,6 +109,7 @@ export class ImprovementService {
         // Store for later evaluation
         this.pendingPredictions.set(predictionId, {
           predictionId,
+          symbol,
           baselinePrice,
           timestamp: Date.now(),
         });
@@ -130,34 +131,57 @@ export class ImprovementService {
   }
 
   private async evaluatePendingPredictions(): Promise<void> {
-    const now = Date.now();
-    const evaluated: string[] = [];
-
     console.log('');
     console.log('🔍 Evaluating pending predictions...');
     console.log(`   Pending: ${this.pendingPredictions.size}`);
 
-    for (const [predictionId, data] of this.pendingPredictions.entries()) {
-      const age = now - data.timestamp;
+    // For historical simulation: find the latest price event timestamp
+    const allPrices = Array.from(this.priceBuffer.values()).flat();
+    const latestPriceTime = allPrices.length > 0
+      ? Math.max(...allPrices.map(e => new Date(e.timestamp).getTime()))
+      : Date.now();
 
-      // Only evaluate predictions that are old enough (24h)
-      if (age < this.EVALUATION_WINDOW_MS) {
+    const evaluated: string[] = [];
+
+    for (const [id, pred] of this.pendingPredictions.entries()) {
+      const predictionTime = pred.timestamp;
+      
+      // For historical data: check if we have price data 24h AFTER the prediction
+      const elapsed = latestPriceTime - predictionTime;
+
+      // Evaluate if we have data from at least 24 hours after prediction
+      if (elapsed < this.EVALUATION_WINDOW_MS) {
         continue;
       }
 
-      // Find matching symbol from prediction ID or use general market
-      const symbol = 'MARKET'; // In real implementation, extract from prediction
-      const currentPrices = this.priceBuffer.get(symbol);
+      // Find price events 24 hours after prediction (in historical time)
+      const futureTime = predictionTime + this.EVALUATION_WINDOW_MS;
+      
+      // For historical simulation: look for prices AFTER the prediction
+      const allPricesFlat = Array.from(this.priceBuffer.values()).flat();
+      const relevantPrices = allPricesFlat.filter(e => {
+        const eventTime = new Date(e.timestamp).getTime();
+        return eventTime > predictionTime && eventTime <= futureTime && e.symbol === pred.symbol;
+      });
+      
+      // If no symbol-specific prices, use any prices in the timeframe
+      const timeframePrices = relevantPrices.length === 0
+        ? allPricesFlat.filter(e => {
+            const eventTime = new Date(e.timestamp).getTime();
+            return eventTime > predictionTime && eventTime <= futureTime;
+          })
+        : relevantPrices;
 
-      if (!currentPrices || currentPrices.length === 0) {
-        console.log(`   ⏭️  Skipping ${predictionId} - no price data`);
+      if (!timeframePrices || timeframePrices.length === 0) {
+        console.log(`   ⏭️  Skipping ${id} - no price data`);
         continue;
       }
 
-      // Get latest price
-      const latestPrice = currentPrices[currentPrices.length - 1].price || 0;
-      const priceChange = latestPrice - data.baselinePrice;
-      const percentChange = (priceChange / data.baselinePrice) * 100;
+      // Calculate outcome
+      const baselinePrice = pred.baselinePrice;
+      const finalPrice = timeframePrices[timeframePrices.length - 1].price || 0;
+      const priceChange = finalPrice - baselinePrice;
+      const percentChange = (priceChange / baselinePrice) * 100;
 
       // Determine actual movement
       let actualMovement: 'up' | 'down' | 'neutral';
@@ -171,17 +195,17 @@ export class ImprovementService {
 
       // Record outcome
       await sensoClient.recordOutcome(
-        predictionId,
+        id,
         actualMovement,
         priceChange,
         percentChange
       );
 
-      console.log(`   ✅ Evaluated: ${predictionId}`);
-      console.log(`      Price: $${data.baselinePrice.toFixed(2)} → $${latestPrice.toFixed(2)} (${percentChange > 0 ? '+' : ''}${percentChange.toFixed(2)}%)`);
+      console.log(`   ✅ Evaluated: ${id}`);
+      console.log(`      Price: $${baselinePrice.toFixed(2)} → $${finalPrice.toFixed(2)} (${percentChange > 0 ? '+' : ''}${percentChange.toFixed(2)}%)`);
       console.log(`      Movement: ${actualMovement.toUpperCase()}`);
 
-      evaluated.push(predictionId);
+      evaluated.push(id);
     }
 
     // Remove evaluated predictions
