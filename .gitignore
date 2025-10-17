@@ -26,3 +26,6 @@ Thumbs.db
 
 # Large datasets (download separately)
 data/kaggle/
+
+# TypeScript build output
+*.tsbuildinfo

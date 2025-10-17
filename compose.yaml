@@ -34,26 +34,35 @@ services:
       retries: 5
       start_period: 5s
 
-  # Market Pulse API Service (to be implemented in Phase 1)
-  # pulse-service:
-  #   build: .
-  #   container_name: marketpulse-api
-  #   env_file: .env
-  #   environment:
-  #     - NODE_ENV=${NODE_ENV}
-  #     - PORT=${PORT}
-  #     - REDPANDA_BROKERS=redpanda:9092
-  #     - DATA_START_DATE=${DATA_START_DATE}
-  #     - DATA_END_DATE=${DATA_END_DATE}
-  #   ports:
-  #     - "${PORT}:${PORT}"
-  #   depends_on:
-  #     redpanda:
-  #       condition: service_healthy
-  #   networks:
-  #     - marketpulse-network
-  #   volumes:
-  #     - ./data:/app/data:ro
+  # Market Pulse API Service - Phase 1 Implementation
+  pulse-service:
+    build: .
+    container_name: marketpulse-api
+    env_file: .env
+    environment:
+      - NODE_ENV=${NODE_ENV}
+      - PORT=${PORT}
+      - REDPANDA_BROKERS=redpanda:9092
+      - DATA_START_DATE=${DATA_START_DATE}
+      - DATA_END_DATE=${DATA_END_DATE}
+      - REDPANDA_TOPIC_NEWS=${REDPANDA_TOPIC_NEWS}
+      - REDPANDA_TOPIC_PRICES=${REDPANDA_TOPIC_PRICES}
+    ports:
+      - "${PORT}:${PORT}"
+    depends_on:
+      redpanda:
+        condition: service_healthy
+    networks:
+      - marketpulse-network
+    volumes:
+      - ./data:/app/data:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:${PORT}/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
 
 networks:
   marketpulse-network:
