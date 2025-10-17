@@ -143,8 +143,21 @@ Tracks prediction outcomes and continuously improves accuracy:
 
 **Status:** ✅ Implemented and ready for deployment
 
-### Phase 4 — Output Layer
-Slack feed, web dashboard, terminal streaming “Market Insight Cards”.
+### ✅ Phase 4 — Output Layer  
+User-facing interfaces for real-time market insights:
+- **Web Dashboard:** Beautiful real-time visualization of predictions
+- **Slack Notifications:** High-confidence predictions sent to Slack
+- **Insights API:** RESTful endpoints for retrieving predictions
+- **Auto-refresh:** Dashboard updates every 30 seconds
+
+**Features:**
+- Real-time predictions display with confidence scores
+- Color-coded prediction types (bullish/bearish/neutral)
+- Performance metrics overview
+- Slack integration for instant alerts
+- Mobile-responsive design
+
+**Status:** ✅ Implemented and ready for deployment
 
 ---
 ## 📦 Deployment & Runtime
@@ -260,6 +273,19 @@ curl https://finance.biaz.hurated.com/metrics | jq .
 
 # Check improvement status
 curl https://finance.biaz.hurated.com/stream/status | jq '.improvement'
+```
+
+### Phase 4 - Output Layer
+
+```bash
+# Access web dashboard
+open https://finance.biaz.hurated.com
+
+# Get recent predictions (for custom integrations)
+curl https://finance.biaz.hurated.com/insights/recent | jq .
+
+# Slack notifications are automatic when reasoning service is running
+# Configure SLACK_WEBHOOK_URL in .env to enable
 ```
 
 ### Redpanda Admin

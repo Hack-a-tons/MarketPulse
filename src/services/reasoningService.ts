@@ -2,6 +2,7 @@ import { createConsumer } from '../utils/redpandaConsumer';
 import { redpandaClient } from '../utils/redpandaClient';
 import { trueFoundryClient } from '../utils/trueFoundryClient';
 import { sensoClient } from '../utils/sensoClient';
+import { slackNotifier } from '../utils/slackNotifier';
 import { config } from '../config/env';
 import { MarketEvent, MarketPrediction } from '../types';
 
@@ -12,6 +13,7 @@ import { MarketEvent, MarketPrediction } from '../types';
 export class ReasoningService {
   private newsBuffer: MarketEvent[] = [];
   private priceBuffer: MarketEvent[] = [];
+  public recentPredictions: MarketPrediction[] = []; // For Phase 4 dashboard
   private isRunning = false;
   private consumer = createConsumer('reasoning-service');
   private analysisInterval: NodeJS.Timeout | null = null;
@@ -146,6 +148,15 @@ export class ReasoningService {
 
         // Store prediction in Senso for tracking (Phase 3)
         const predictionId = await sensoClient.storePrediction(prediction);
+
+        // Store for dashboard (Phase 4)
+        this.recentPredictions.unshift(prediction);
+        if (this.recentPredictions.length > 20) {
+          this.recentPredictions = this.recentPredictions.slice(0, 20);
+        }
+
+        // Send Slack notification (Phase 4)
+        await slackNotifier.notifyPrediction(prediction);
 
         // Publish prediction to Redpanda with prediction ID
         await this.publishPrediction(prediction, predictionId);

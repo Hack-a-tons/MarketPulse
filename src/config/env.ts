@@ -40,6 +40,13 @@ export const config = {
     endpoint: process.env.SENSO_ENDPOINT || 'https://api.senso.ai/v1',
   },
 
+  // Slack Configuration (Phase 4)
+  slack: {
+    webhookUrl: process.env.SLACK_WEBHOOK_URL,
+    enabled: !!process.env.SLACK_WEBHOOK_URL,
+    minConfidence: parseFloat(process.env.SLACK_MIN_CONFIDENCE || '0.7'), // Only notify on high-confidence predictions
+  },
+
   // Data Paths
   data: {
     newsDir: process.env.DATA_NEWS_DIR || '/app/data/kaggle/news',

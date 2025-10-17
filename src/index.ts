@@ -9,6 +9,7 @@ import { improvementService } from './services/improvementService';
 const app = express();
 
 app.use(express.json());
+app.use(express.static('public')); // Serve dashboard
 
 /**
  * Health check endpoint
@@ -210,6 +211,27 @@ app.get('/metrics', async (req: Request, res: Response) => {
     console.error('Metrics error:', error);
     res.status(500).json({
       error: 'Failed to get metrics',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * Get recent predictions (Phase 4 - Dashboard)
+ */
+app.get('/insights/recent', (req: Request, res: Response) => {
+  try {
+    const predictions = reasoningService.recentPredictions;
+    
+    res.json({
+      predictions,
+      count: predictions.length,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('Insights error:', error);
+    res.status(500).json({
+      error: 'Failed to get insights',
       message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
