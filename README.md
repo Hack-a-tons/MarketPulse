@@ -125,27 +125,40 @@ Slack feed, web dashboard, terminal streaming “Market Insight Cards”.
 
 The project is deployed on `biaz.hurated.com` with all data already uploaded.
 
-**Deploy workflow:**
+**Quick deploy (automated):**
 
 ```bash
-# 1. Commit and push changes locally
+# Deploy with commit
+./scripts/deploy.sh -m "Your commit message"
+
+# Deploy without commit (if already committed)
+./scripts/deploy.sh
+```
+
+The deploy script automatically:
+1. ✅ Copies `.env` to server
+2. ✅ Stages and commits changes (if `-m` flag provided)
+3. ✅ Pushes to GitHub
+4. ✅ Pulls changes on server
+5. ✅ Rebuilds Docker containers
+6. ✅ Restarts services
+
+**Manual deployment:**
+
+```bash
+# 1. Copy .env and commit changes
+scp .env biaz.hurated.com:MarketPulse/
 git add .
 git commit -m "Your changes"
 git push origin main
 
-# 2. Update repository on server
+# 2. Update and rebuild on server
 ssh biaz.hurated.com "cd MarketPulse && git pull"
-
-# 3. If .env was updated, copy it to server
-scp .env biaz.hurated.com:MarketPulse/
-
-# 4. Start/restart services on server
+ssh biaz.hurated.com "cd MarketPulse && docker compose build"
 ssh biaz.hurated.com "cd MarketPulse && docker compose up -d"
 
-# 5. Check status
+# 3. Check status and logs
 ssh biaz.hurated.com "cd MarketPulse && docker compose ps"
-
-# 6. View logs
 ssh biaz.hurated.com "cd MarketPulse && docker compose logs -f"
 ```
 
