@@ -176,7 +176,12 @@ ssh biaz.hurated.com "cd MarketPulse && docker compose ps"
 ssh biaz.hurated.com "cd MarketPulse && docker compose logs -f"
 ```
 
-**Service URLs:**
+**Service URLs (SSL enabled):**
+- **Main API:** `https://finance.biaz.hurated.com`
+- **Redpanda Admin:** `https://admin.biaz.hurated.com`
+- **Redpanda Kafka:** `kafka.biaz.hurated.com:443`
+
+**Alternative (direct port access):**
 - API: `http://biaz.hurated.com:16000`
 - Redpanda Kafka: `biaz.hurated.com:19000`
 - Redpanda Admin: `http://biaz.hurated.com:20000`
@@ -191,6 +196,51 @@ docker compose up -d
 ```
 
 Full setup starts in **`TODO.md`** — that file is the entry point for implementation.
+
+---
+## 📍 API Usage Examples
+
+### Phase 1 - Data Streaming
+
+```bash
+# Check health
+curl https://finance.biaz.hurated.com/health
+
+# Start historical data replay at 1000x speed
+curl 'https://finance.biaz.hurated.com/stream?mode=historical&speed=1000'
+
+# Start replay for specific date
+curl 'https://finance.biaz.hurated.com/stream?mode=historical&date=2010-01-04&speed=10'
+
+# Check streaming status
+curl https://finance.biaz.hurated.com/stream/status
+
+# Stop streaming
+curl -X POST https://finance.biaz.hurated.com/stream/stop
+```
+
+### Phase 2 - AI Reasoning
+
+```bash
+# Start AI reasoning service
+curl -X POST https://finance.biaz.hurated.com/reasoning/start
+
+# Stop reasoning service
+curl -X POST https://finance.biaz.hurated.com/reasoning/stop
+
+# Check reasoning status (includes buffer sizes)
+curl https://finance.biaz.hurated.com/stream/status | jq '.reasoning'
+```
+
+### Redpanda Admin
+
+```bash
+# Check cluster health
+curl https://admin.biaz.hurated.com/v1/cluster/health_overview
+
+# List topics
+curl https://admin.biaz.hurated.com/v1/topics
+```
 
 ---
 ## 📍 Example Insight Output
