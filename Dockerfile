@@ -27,6 +27,9 @@ RUN npm ci --only=production
 # Copy built application from builder
 COPY --from=builder /app/dist ./dist
 
+# Copy public folder for dashboard
+COPY public ./public
+
 # Create data directory
 RUN mkdir -p /app/data/kaggle/news /app/data/kaggle/stocks
 
