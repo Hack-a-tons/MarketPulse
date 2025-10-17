@@ -56,3 +56,28 @@ export interface StreamConfig {
   date?: string; // For historical mode
   speed?: number; // Replay speed multiplier (1 = real-time, 10 = 10x faster)
 }
+
+/**
+ * Market prediction from LLM
+ */
+export interface MarketPrediction {
+  timestamp: string;
+  symbol?: string;
+  prediction: 'bullish' | 'bearish' | 'neutral';
+  confidence: number; // 0-1
+  reasoning: string;
+  timeHorizon: string; // e.g., "24h", "48h", "1week"
+  correlatedNews?: string[]; // Headlines that influenced the prediction
+  priceTarget?: number;
+  meta?: Record<string, any>;
+}
+
+/**
+ * Correlation between news and price
+ */
+export interface NewsTouch {
+  newsEvent: MarketEvent;
+  priceEvents: MarketEvent[];
+  correlationStrength: number; // 0-1
+  timeDelta: number; // milliseconds between news and price movement
+}

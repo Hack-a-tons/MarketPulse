@@ -26,6 +26,13 @@ export const config = {
     token: process.env.APIFY_API_TOKEN,
   },
 
+  // TrueFoundry Configuration
+  trueFoundry: {
+    apiKey: process.env.TRUEFOUNDRY_API_KEY,
+    workspace: process.env.TRUEFOUNDRY_WORKSPACE,
+    endpoint: process.env.TRUEFOUNDRY_ENDPOINT || 'https://api.truefoundry.com/v1',
+  },
+
   // Data Paths
   data: {
     newsDir: process.env.DATA_NEWS_DIR || '/app/data/kaggle/news',

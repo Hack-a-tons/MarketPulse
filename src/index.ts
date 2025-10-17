@@ -3,6 +3,7 @@ import { config } from './config/env';
 import { historicalReplay } from './producers/replayHistorical';
 import { liveStream } from './producers/streamLive';
 import { redpandaClient } from './utils/redpandaClient';
+import { reasoningService } from './services/reasoningService';
 
 const app = express();
 
@@ -100,6 +101,7 @@ app.get('/stream/status', (req: Request, res: Response) => {
     live: {
       running: liveStream.getStatus(),
     },
+    reasoning: reasoningService.getStatus(),
     config: {
       redpandaBrokers: config.redpanda.brokers,
       topics: config.redpanda.topics,
@@ -109,6 +111,46 @@ app.get('/stream/status', (req: Request, res: Response) => {
       },
     },
   });
+});
+
+/**
+ * Start reasoning service (Phase 2)
+ */
+app.post('/reasoning/start', async (req: Request, res: Response) => {
+  try {
+    await reasoningService.start();
+    
+    res.json({
+      status: 'started',
+      message: 'Reasoning service started - consuming from Redpanda and generating predictions',
+    });
+  } catch (error) {
+    console.error('Reasoning service error:', error);
+    res.status(500).json({
+      error: 'Failed to start reasoning service',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * Stop reasoning service
+ */
+app.post('/reasoning/stop', async (req: Request, res: Response) => {
+  try {
+    await reasoningService.stop();
+    
+    res.json({
+      status: 'stopped',
+      message: 'Reasoning service stopped',
+    });
+  } catch (error) {
+    console.error('Reasoning service error:', error);
+    res.status(500).json({
+      error: 'Failed to stop reasoning service',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
 });
 
 /**
@@ -139,11 +181,14 @@ async function startServer() {
       console.log(`  GET  /stream              - Start streaming`);
       console.log(`  POST /stream/stop         - Stop streaming`);
       console.log(`  GET  /stream/status       - Get status`);
+      console.log(`  POST /reasoning/start     - Start reasoning service (Phase 2)`);
+      console.log(`  POST /reasoning/stop      - Stop reasoning service`);
       console.log('');
       console.log('Examples:');
-      console.log(`  curl http://localhost:${config.port}/stream?mode=historical`);
-      console.log(`  curl http://localhost:${config.port}/stream?mode=historical&date=2010-01-04`);
+      console.log(`  # Phase 1 - Stream data`);
       console.log(`  curl http://localhost:${config.port}/stream?mode=historical&speed=10`);
+      console.log(`  # Phase 2 - Start AI reasoning`);
+      console.log(`  curl -X POST http://localhost:${config.port}/reasoning/start`);
       console.log('');
       console.log('═══════════════════════════════════════════════════════════');
       console.log('');
@@ -159,6 +204,7 @@ process.on('SIGTERM', async () => {
   console.log('SIGTERM received, shutting down gracefully...');
   historicalReplay.stop();
   liveStream.stop();
+  await reasoningService.stop();
   await redpandaClient.disconnect();
   process.exit(0);
 });
@@ -167,6 +213,7 @@ process.on('SIGINT', async () => {
   console.log('SIGINT received, shutting down gracefully...');
   historicalReplay.stop();
   liveStream.stop();
+  await reasoningService.stop();
   await redpandaClient.disconnect();
   process.exit(0);
 });

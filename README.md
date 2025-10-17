@@ -104,13 +104,27 @@ The service will be available at `localhost:19000` (Kafka API) for your applicat
 
 ---
 ## 🧩 Project Phases
-### ✅ Phase 1 — Unified Data Stream Layer (start here)
-See **`TODO.md`** — it defines the ingestion service that outputs **historical & live data in the same format** via Redpanda topics:
-- `market.news`
-- `market.prices`
+### ✅ Phase 1 — Unified Data Stream Layer
+Ingestion service that outputs **historical & live data in the same format** via Redpanda topics:
+- `market.news` - Financial news with sentiment scores
+- `market.prices` - Stock price data
 
-### Phase 2 — LLM Reasoning Layer (TrueFoundry)
-Reads the above streams → generates sentiment + trend prediction.
+**Status:** ✅ Deployed and running on production
+
+### ✅ Phase 2 — LLM Reasoning Layer (TrueFoundry)
+Consumes streams from Phase 1 and generates AI-powered predictions:
+- Correlates news events with price movements
+- Uses TrueFoundry LLM for sentiment analysis
+- Generates trend predictions (bullish/bearish/neutral) with confidence scores
+- Publishes predictions back to Redpanda for Phase 3
+
+**Features:**
+- Real-time event correlation (news + prices)
+- Periodic analysis (every 60 seconds)
+- Buffered event processing
+- AI-powered market predictions
+
+**Status:** ✅ Implemented and ready for deployment
 
 ### Phase 3 — Self‑Improvement Layer (Senso)
 Evaluates prediction accuracy → adjusts strategy automatically.
