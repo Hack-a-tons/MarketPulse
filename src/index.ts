@@ -4,6 +4,7 @@ import { historicalReplay } from './producers/replayHistorical';
 import { liveStream } from './producers/streamLive';
 import { redpandaClient } from './utils/redpandaClient';
 import { reasoningService } from './services/reasoningService';
+import { improvementService } from './services/improvementService';
 
 const app = express();
 
@@ -102,6 +103,7 @@ app.get('/stream/status', (req: Request, res: Response) => {
       running: liveStream.getStatus(),
     },
     reasoning: reasoningService.getStatus(),
+    improvement: improvementService.getStatus(),
     config: {
       redpandaBrokers: config.redpanda.brokers,
       topics: config.redpanda.topics,
@@ -154,6 +156,66 @@ app.post('/reasoning/stop', async (req: Request, res: Response) => {
 });
 
 /**
+ * Start self-improvement service (Phase 3)
+ */
+app.post('/improvement/start', async (req: Request, res: Response) => {
+  try {
+    await improvementService.start();
+    
+    res.json({
+      status: 'started',
+      message: 'Self-improvement service started - tracking predictions and learning from outcomes',
+    });
+  } catch (error) {
+    console.error('Improvement service error:', error);
+    res.status(500).json({
+      error: 'Failed to start improvement service',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * Stop self-improvement service
+ */
+app.post('/improvement/stop', async (req: Request, res: Response) => {
+  try {
+    await improvementService.stop();
+    
+    res.json({
+      status: 'stopped',
+      message: 'Self-improvement service stopped',
+    });
+  } catch (error) {
+    console.error('Improvement service error:', error);
+    res.status(500).json({
+      error: 'Failed to stop improvement service',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * Get performance metrics (Phase 3)
+ */
+app.get('/metrics', async (req: Request, res: Response) => {
+  try {
+    const metrics = await improvementService.getMetrics();
+    
+    res.json({
+      ...metrics,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('Metrics error:', error);
+    res.status(500).json({
+      error: 'Failed to get metrics',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
  * Start server
  */
 async function startServer() {
@@ -183,12 +245,17 @@ async function startServer() {
       console.log(`  GET  /stream/status       - Get status`);
       console.log(`  POST /reasoning/start     - Start reasoning service (Phase 2)`);
       console.log(`  POST /reasoning/stop      - Stop reasoning service`);
+      console.log(`  POST /improvement/start   - Start self-improvement (Phase 3)`);
+      console.log(`  POST /improvement/stop    - Stop self-improvement`);
+      console.log(`  GET  /metrics             - Get performance metrics`);
       console.log('');
       console.log('Examples:');
       console.log(`  # Phase 1 - Stream data`);
       console.log(`  curl http://localhost:${config.port}/stream?mode=historical&speed=10`);
       console.log(`  # Phase 2 - Start AI reasoning`);
       console.log(`  curl -X POST http://localhost:${config.port}/reasoning/start`);
+      console.log(`  # Phase 3 - Start self-improvement`);
+      console.log(`  curl -X POST http://localhost:${config.port}/improvement/start`);
       console.log('');
       console.log('═══════════════════════════════════════════════════════════');
       console.log('');
@@ -205,6 +272,7 @@ process.on('SIGTERM', async () => {
   historicalReplay.stop();
   liveStream.stop();
   await reasoningService.stop();
+  await improvementService.stop();
   await redpandaClient.disconnect();
   process.exit(0);
 });
@@ -214,6 +282,7 @@ process.on('SIGINT', async () => {
   historicalReplay.stop();
   liveStream.stop();
   await reasoningService.stop();
+  await improvementService.stop();
   await redpandaClient.disconnect();
   process.exit(0);
 });

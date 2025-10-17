@@ -1,6 +1,7 @@
 import { createConsumer } from '../utils/redpandaConsumer';
 import { redpandaClient } from '../utils/redpandaClient';
 import { trueFoundryClient } from '../utils/trueFoundryClient';
+import { sensoClient } from '../utils/sensoClient';
 import { config } from '../config/env';
 import { MarketEvent, MarketPrediction } from '../types';
 
@@ -143,8 +144,11 @@ export class ReasoningService {
         console.log(`   📊 Confidence: ${(prediction.confidence * 100).toFixed(1)}%`);
         console.log(`   💡 Reasoning: ${prediction.reasoning.substring(0, 100)}...`);
 
-        // Publish prediction to a new topic
-        await this.publishPrediction(prediction);
+        // Store prediction in Senso for tracking (Phase 3)
+        const predictionId = await sensoClient.storePrediction(prediction);
+
+        // Publish prediction to Redpanda with prediction ID
+        await this.publishPrediction(prediction, predictionId);
       } else {
         console.log('   ⚠️  No prediction generated');
       }
@@ -153,7 +157,7 @@ export class ReasoningService {
     }
   }
 
-  private async publishPrediction(prediction: MarketPrediction): Promise<void> {
+  private async publishPrediction(prediction: MarketPrediction, predictionId: string): Promise<void> {
     try {
       // Connect if not already connected
       await redpandaClient.connect();
@@ -165,6 +169,7 @@ export class ReasoningService {
         symbol: prediction.symbol,
         source: 'TrueFoundry-LLM',
         meta: {
+          predictionId, // Include prediction ID for Phase 3 tracking
           prediction: prediction.prediction,
           confidence: prediction.confidence,
           reasoning: prediction.reasoning,

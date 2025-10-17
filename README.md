@@ -124,10 +124,24 @@ Consumes streams from Phase 1 and generates AI-powered predictions:
 - Buffered event processing
 - AI-powered market predictions
 
-**Status:** ✅ Implemented and ready for deployment
+**Status:** ✅ Deployed and running on production
 
-### Phase 3 — Self‑Improvement Layer (Senso)
-Evaluates prediction accuracy → adjusts strategy automatically.
+### ✅ Phase 3 — Self-Improvement Layer (Senso Context OS)
+Tracks prediction outcomes and continuously improves accuracy:
+- Records all predictions made by Phase 2
+- Tracks actual market outcomes (price movements)
+- Calculates accuracy metrics by prediction type
+- Recommends confidence thresholds based on performance
+- Stores learning data in Senso Context OS
+
+**Features:**
+- Automated outcome tracking (24h evaluation window)
+- Per-prediction-type accuracy (bullish/bearish/neutral)
+- Dynamic confidence threshold adjustment
+- Performance metrics API
+- Feedback loop for strategy optimization
+
+**Status:** ✅ Implemented and ready for deployment
 
 ### Phase 4 — Output Layer
 Slack feed, web dashboard, terminal streaming “Market Insight Cards”.
@@ -230,6 +244,22 @@ curl -X POST https://finance.biaz.hurated.com/reasoning/stop
 
 # Check reasoning status (includes buffer sizes)
 curl https://finance.biaz.hurated.com/stream/status | jq '.reasoning'
+```
+
+### Phase 3 - Self-Improvement
+
+```bash
+# Start self-improvement service
+curl -X POST https://finance.biaz.hurated.com/improvement/start
+
+# Stop self-improvement service
+curl -X POST https://finance.biaz.hurated.com/improvement/stop
+
+# Get performance metrics
+curl https://finance.biaz.hurated.com/metrics | jq .
+
+# Check improvement status
+curl https://finance.biaz.hurated.com/stream/status | jq '.improvement'
 ```
 
 ### Redpanda Admin

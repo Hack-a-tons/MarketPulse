@@ -33,6 +33,13 @@ export const config = {
     endpoint: process.env.TRUEFOUNDRY_ENDPOINT || 'https://api.truefoundry.com/v1',
   },
 
+  // Senso Context OS Configuration
+  senso: {
+    apiKey: process.env.SENSO_API_KEY,
+    orgId: process.env.SENSO_ORG_ID,
+    endpoint: process.env.SENSO_ENDPOINT || 'https://api.senso.ai/v1',
+  },
+
   // Data Paths
   data: {
     newsDir: process.env.DATA_NEWS_DIR || '/app/data/kaggle/news',
