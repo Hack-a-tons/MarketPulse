@@ -81,16 +81,19 @@ This script automatically:
 **Redpanda** is a Kafka-compatible streaming platform that will be automatically set up via Docker Compose. You don't need to install it manually.
 
 ```bash
-# Start Redpanda (will be created in docker-compose.yml)
-docker-compose up -d
+# Start Redpanda
+docker compose up -d
 
 # Verify it's running
-docker-compose ps
+docker compose ps
+
+# Check logs
+docker compose logs -f redpanda
 ```
 
-The service will be available at `localhost:9092` for your application to connect to.
+The service will be available at `localhost:9092` (Kafka API) for your application to connect to.
 
-> **Note:** Redpanda configuration is already set in `.env.example`. Docker Compose will handle the installation and setup automatically.
+> **Note:** All ports are configured in `.env`. Docker Compose uses these values from your environment.
 
 ---
 ## 🛠 Core Tools & Architecture
@@ -117,7 +120,48 @@ Slack feed, web dashboard, terminal streaming “Market Insight Cards”.
 
 ---
 ## 📦 Deployment & Runtime
-Designed to run locally as Node.js (dev) and via Docker using **`compose.yml`** in production.
+
+### Production Deployment (biaz.hurated.com)
+
+The project is deployed on `biaz.hurated.com` with all data already uploaded.
+
+**Deploy workflow:**
+
+```bash
+# 1. Commit and push changes locally
+git add .
+git commit -m "Your changes"
+git push origin main
+
+# 2. Update repository on server
+ssh biaz.hurated.com "cd MarketPulse && git pull"
+
+# 3. If .env was updated, copy it to server
+scp .env biaz.hurated.com:MarketPulse/
+
+# 4. Start/restart services on server
+ssh biaz.hurated.com "cd MarketPulse && docker compose up -d"
+
+# 5. Check status
+ssh biaz.hurated.com "cd MarketPulse && docker compose ps"
+
+# 6. View logs
+ssh biaz.hurated.com "cd MarketPulse && docker compose logs -f"
+```
+
+**Service URLs:**
+- API: `http://biaz.hurated.com:16000`
+- Redpanda Kafka: `biaz.hurated.com:9092`
+- Redpanda Admin: `http://biaz.hurated.com:19092`
+
+### Local Development
+
+For local development:
+```bash
+cp .env.example .env
+# Edit .env with your configuration
+docker compose up -d
+```
 
 Full setup starts in **`TODO.md`** — that file is the entry point for implementation.
 
