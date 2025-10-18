@@ -258,11 +258,16 @@ app.get('/insights/recent', (req: Request, res: Response) => {
  */
 async function startServer() {
   try {
-    // Test Redpanda connection
+    // Test Redpanda connection (optional for development)
     console.log('🔌 Testing Redpanda connection...');
-    await redpandaClient.connect();
-    await redpandaClient.disconnect();
-    console.log('✅ Redpanda connection successful');
+    try {
+      await redpandaClient.connect();
+      await redpandaClient.disconnect();
+      console.log('✅ Redpanda connection successful');
+    } catch (redpandaError) {
+      console.warn('⚠️  Redpanda connection failed - continuing without Kafka (API endpoints will still work)');
+      console.warn('   To enable streaming features, start Redpanda with: docker compose up -d');
+    }
 
     // Start HTTP server
     app.listen(config.port, () => {
@@ -278,22 +283,23 @@ async function startServer() {
       console.log('');
       console.log('Endpoints:');
       console.log(`  GET  /health              - Health check`);
+      console.log(`  GET  /insights/recent     - Get recent predictions`);
+      console.log(`  GET  /metrics             - Get performance metrics`);
+      console.log(`  GET  /stream/status       - Get status`);
       console.log(`  GET  /stream              - Start streaming`);
       console.log(`  POST /stream/stop         - Stop streaming`);
-      console.log(`  GET  /stream/status       - Get status`);
       console.log(`  POST /reasoning/start     - Start reasoning service (Phase 2)`);
       console.log(`  POST /reasoning/stop      - Stop reasoning service`);
       console.log(`  POST /improvement/start   - Start self-improvement (Phase 3)`);
       console.log(`  POST /improvement/stop    - Stop self-improvement`);
-      console.log(`  GET  /metrics             - Get performance metrics`);
       console.log('');
       console.log('Examples:');
+      console.log(`  # Health check`);
+      console.log(`  curl http://localhost:${config.port}/health`);
+      console.log(`  # Get recent predictions`);
+      console.log(`  curl http://localhost:${config.port}/insights/recent`);
       console.log(`  # Phase 1 - Stream data`);
       console.log(`  curl http://localhost:${config.port}/stream?mode=historical&speed=10`);
-      console.log(`  # Phase 2 - Start AI reasoning`);
-      console.log(`  curl -X POST http://localhost:${config.port}/reasoning/start`);
-      console.log(`  # Phase 3 - Start self-improvement`);
-      console.log(`  curl -X POST http://localhost:${config.port}/improvement/start`);
       console.log('');
       console.log('═══════════════════════════════════════════════════════════');
       console.log('');
