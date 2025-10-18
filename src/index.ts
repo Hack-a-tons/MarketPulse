@@ -1,4 +1,5 @@
 import express, { Request, Response } from 'express';
+import cors from 'cors';
 import { config } from './config/env';
 import { historicalReplay } from './producers/replayHistorical';
 import { liveStream } from './producers/streamLive';
@@ -7,6 +8,13 @@ import { reasoningService } from './services/reasoningService';
 import { improvementService } from './services/improvementService';
 
 const app = express();
+
+// Enable CORS for all origins (allow web apps to access the API)
+app.use(cors({
+  origin: '*', // Allow all origins. In production, specify: ['http://localhost:8081', 'https://your-domain.com']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 
 app.use(express.json());
 app.use(express.static('public')); // Serve dashboard
