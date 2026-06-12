@@ -67,6 +67,9 @@ services:
 networks:
   marketpulse-network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 10.250.26.0/24
 
 volumes:
   redpanda-data:
