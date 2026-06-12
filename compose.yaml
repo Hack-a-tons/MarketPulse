@@ -1,7 +1,7 @@
 services:
   # Redpanda - Kafka-compatible streaming platform
   redpanda:
-    image: redpandadata/redpanda:latest
+    image: redpandadata/redpanda@sha256:bd6c35647153a4dbc19507c8037dcca0802484c23e6e5fbb97591a62539e313a
     container_name: marketpulse-redpanda
     command:
       - redpanda
